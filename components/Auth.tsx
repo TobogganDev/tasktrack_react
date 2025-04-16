@@ -1,4 +1,3 @@
-// app/components/Auth.tsx
 import React, { useState } from "react";
 import { Alert, StyleSheet, View } from "react-native";
 import { Button, Input } from "@rneui/themed";
@@ -21,7 +20,6 @@ export default function Auth() {
             Alert.alert("Error", error.message);
             return;
         }
-        // On successful sign in, the session will be updated in index.tsx.
     }
 
     async function signUpWithEmail() {

@@ -1,48 +1,26 @@
-// app/index.tsx
-import { useState, useEffect } from "react";
-import { View, Text, ActivityIndicator, StyleSheet, Button } from "react-native";
-import { Session } from "@supabase/supabase-js";
-import { supabase } from "@/lib/supabase";
+import React, { useEffect, useState } from "react";
+import { View, Text, ActivityIndicator, StyleSheet } from "react-native";
 import Auth from "@/components/Auth";
 import Account from "@/components/Account";
 import LogOutButton from "@/components/utils/LogOutButton";
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/lib/supabase";
 
-export default function App() {
-    const [session, setSession] = useState<Session | null>(null);
+export default function HomePage() {
+    const { session } = useAuth();
     const [profileComplete, setProfileComplete] = useState(false);
     const [loading, setLoading] = useState(true);
-
-    // Fetch the current session and listen for auth state changes.
-    useEffect(() => {
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            setSession(session);
-        });
-        const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-            setSession(session);
-        });
-        return () => {
-            listener.subscription.unsubscribe();
-        };
-    }, []);
 
     useEffect(() => {
         const fetchProfile = async () => {
             if (session && session.user) {
-                const { data, error } = await supabase.from("users").select("name").eq("id", session.user.id).single();
+                const { data } = await supabase.from("users").select("name").eq("id", session.user.id).single();
 
-                if (data && data.name) {
-                    setProfileComplete(true);
-                } else {
-                    setProfileComplete(false);
-                }
+                setProfileComplete(data && data.name ? true : false);
             }
             setLoading(false);
         };
-        if (session) {
-            fetchProfile();
-        } else {
-            setLoading(false);
-        }
+        fetchProfile();
     }, [session]);
 
     if (loading) {
@@ -58,15 +36,13 @@ export default function App() {
     }
 
     if (session && !profileComplete) {
-        return <Account key={session.user.id} session={session} onProfileUpdated={() => setProfileComplete(true)} />;
+        return <Account key={session.user.id} onProfileUpdated={() => setProfileComplete(true)} />;
     }
 
     return (
         <View style={styles.center}>
             <Text style={styles.welcome}>Welcome Home!</Text>
-            {/* Additional home page content can go here */}
             <Text style={{ marginTop: 20 }}>You are logged in as {session.user.email}</Text>
-            {/* Add a button to sign out */}
             <LogOutButton />
         </View>
     );
