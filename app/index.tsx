@@ -5,6 +5,7 @@ import Account from "@/components/Account";
 import LogOutButton from "@/components/utils/LogOutButton";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/lib/supabase";
+import TasksManager from "@/components/TasksManager";
 
 export default function HomePage() {
     const { session } = useAuth();
@@ -44,6 +45,8 @@ export default function HomePage() {
             <Text style={styles.welcome}>Welcome Home!</Text>
             <Text style={{ marginTop: 20 }}>You are logged in as {session.user.email}</Text>
             <LogOutButton />
+
+            <TasksManager />
         </View>
     );
 }
