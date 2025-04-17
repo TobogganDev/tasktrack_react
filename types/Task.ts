@@ -5,5 +5,5 @@ export interface Task {
     description?: string | null;
     location?: Record<string, any> | null;
     done?: boolean | null;
-    created_at?: string;
+    created_at?: Date;
 }

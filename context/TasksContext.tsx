@@ -1,79 +1,125 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-
-export type TaskCategory = 'Work' | 'Personal' | 'Other';
-
-export interface Task {
-  id: string;
-  title: string;
-  completed: boolean;
-  category: TaskCategory;
-  createdAt: Date;
-}
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/context/AuthContext";
+import { Task } from "@/types/Task";
 
 interface TasksContextType {
-  tasks: Task[];
-  addTask: (title: string, category: TaskCategory) => void;
-  toggleTaskCompletion: (id: string) => void;
-  deleteTask: (id: string) => void;
-  getFilteredTasks: (category: TaskCategory | 'All') => Task[];
+    tasks: Task[];
+    loading: boolean;
+    page: number;
+    nextPage: () => void;
+    prevPage: () => void;
+    setPage: (p: number) => void;
+    fetchTasks: (page?: number) => Promise<void>;
+    addTask: (title: string, description: string) => Promise<void>;
 }
 
 const TasksContext = createContext<TasksContextType | undefined>(undefined);
-
 export const useTasksContext = () => {
-  const context = useContext(TasksContext);
-  if (!context) {
-    throw new Error('useTasksContext must be used within a TasksProvider');
-  }
-  return context;
+    const ctx = useContext(TasksContext);
+    if (!ctx) throw new Error("useTasksContext must be used within TasksProvider");
+    return ctx;
 };
 
-interface TasksProviderProps {
-  children: ReactNode;
-}
+const STORAGE_KEY_PREFIX = "@tasks_page_";
 
-export const TasksProvider = ({ children }: TasksProviderProps) => {
-  const [tasks, setTasks] = useState<Task[]>([]);
+export const TasksProvider = ({ children }: { children: ReactNode }) => {
+    const { session } = useAuth();
+    const [tasks, setTasks] = useState<Task[]>([]);
+    const [loading, setLoading] = useState<boolean>(false);
+    const [page, setPage] = useState<number>(1);
+    const PAGE_SIZE = 10;
 
-  const addTask = (title: string, category: TaskCategory) => {
-    const newTask: Task = {
-      id: Date.now().toString(),
-      title,
-      completed: false,
-      category,
-      createdAt: new Date(),
+    // Load from AsyncStorage
+    const loadLocalPage = async (p: number): Promise<Task[]> => {
+        try {
+            const raw = await AsyncStorage.getItem(STORAGE_KEY_PREFIX + p);
+            return raw ? JSON.parse(raw) : [];
+        } catch (e) {
+            console.error("loadLocalPage failed", e);
+            return [];
+        }
     };
-    setTasks((prevTasks) => [...prevTasks, newTask]);
-  };
 
-  const toggleTaskCompletion = (id: string) => {
-    setTasks((prevTasks) =>
-      prevTasks.map((task) =>
-        task.id === id ? { ...task, completed: !task.completed } : task
-      )
+    // Save to AsyncStorage
+    const saveLocalPage = async (p: number, arr: Task[]) => {
+        try {
+            await AsyncStorage.setItem(STORAGE_KEY_PREFIX + p, JSON.stringify(arr));
+        } catch (e) {
+            console.error("saveLocalPage failed", e);
+        }
+    };
+
+    // Fetch from Supabase and sync local
+    const fetchTasks = async (p: number = page) => {
+        setLoading(true);
+        const local = await loadLocalPage(p);
+        setTasks(local);
+
+        if (session?.user) {
+            const from = (p - 1) * PAGE_SIZE;
+            const to = p * PAGE_SIZE - 1;
+            const { data, error } = await supabase
+                .from("tasks")
+                .select("*")
+                .eq("user_id", session.user.id)
+                .order("created_at", { ascending: false })
+                .range(from, to);
+
+            if (error) {
+                console.error("fetchTasks supabase error", error);
+            } else if (data) {
+                setTasks(data);
+                await saveLocalPage(p, data);
+            }
+        }
+
+        setLoading(false);
+    };
+
+    useEffect(() => {
+        setPage(1);
+    }, [session]);
+
+    useEffect(() => {
+        fetchTasks(page);
+    }, [page, session]);
+
+    const nextPage = () => setPage((prev) => prev + 1);
+    const prevPage = () => setPage((prev) => Math.max(1, prev - 1));
+
+    const addTask = async (title: string, desription: string) => {
+        setLoading(true);
+        if (!session?.user) {
+            console.warn("no session!");
+            setLoading(false);
+            return;
+        }
+        const { error } = await supabase.from("tasks").insert({
+            title,
+            description: desription,
+            done: false,
+            user_id: session.user.id,
+        });
+        if (error) console.error("addTask error", error);
+        await fetchTasks(page);
+    };
+
+    return (
+        <TasksContext.Provider
+            value={{
+                tasks,
+                loading,
+                page,
+                setPage,
+                nextPage,
+                prevPage,
+                fetchTasks,
+                addTask,
+            }}
+        >
+            {children}
+        </TasksContext.Provider>
     );
-  };
-
-  const deleteTask = (id: string) => {
-    setTasks((prevTasks) => prevTasks.filter((task) => task.id !== id));
-  };
-
-  const getFilteredTasks = (category: TaskCategory | 'All') => {
-    if (category === 'All') {
-      return tasks;
-    }
-    return tasks.filter((task) => task.category === category);
-  };
-
-  const value = {
-    tasks,
-    addTask,
-    toggleTaskCompletion,
-    deleteTask,
-    getFilteredTasks,
-  };
-
-  return (
-    <TasksContext.Provider value={value}>{children}</TasksContext.Provider>
-  );
 };
