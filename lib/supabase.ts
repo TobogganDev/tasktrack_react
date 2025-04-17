@@ -16,16 +16,47 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 const isWeb = Platform.OS === "web";
 
+const customStorage = {
+    getItem: async (key: string) => {
+        if (isWeb) {
+            try {
+                const value = global.localStorage?.getItem(key);
+                return value;
+            } catch (error) {
+                return AsyncStorage.getItem(key);
+            }
+        }
+        return AsyncStorage.getItem(key);
+    },
+    setItem: async (key: string, value: string) => {
+        if (isWeb) {
+            try {
+                global.localStorage?.setItem(key, value);
+                return;
+            } catch (error) {
+                return AsyncStorage.setItem(key, value);
+            }
+        }
+        return AsyncStorage.setItem(key, value);
+    },
+    removeItem: async (key: string) => {
+        if (isWeb) {
+            try {
+                global.localStorage?.removeItem(key);
+                return;
+            } catch (error) {
+                return AsyncStorage.removeItem(key);
+            }
+        }
+        return AsyncStorage.removeItem(key);
+    }
+};
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-    auth: isWeb
-        ? {
-              storage: localStorage,
-              detectSessionInUrl: true,
-          }
-        : {
-              storage: AsyncStorage,
-              autoRefreshToken: true,
-              persistSession: true,
-              detectSessionInUrl: false,
-          },
+    auth: {
+        storage: customStorage,
+        autoRefreshToken: !isWeb ? true : undefined,
+        persistSession: true,
+        detectSessionInUrl: isWeb ? true : false,
+    },
 });

@@ -2,6 +2,9 @@ import React from 'react';
 import { Montserrat_100Thin, Montserrat_400Regular, Montserrat_600SemiBold, useFonts } from '@expo-google-fonts/montserrat';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect as reactUseEffect } from 'react';
+import { AuthProvider } from "@/context/AuthContext";
+import { TasksProvider } from "@/context/TasksContext";
+import { Slot } from "expo-router";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -24,7 +27,9 @@ export default function App() {
 
     return (
         <AuthProvider>
-            <Slot />
+            <TasksProvider>
+                <Slot />
+            </TasksProvider>
         </AuthProvider>
     );
 }
