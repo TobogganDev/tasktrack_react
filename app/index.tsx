@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import TasksManager from "@/components/utils/TasksManager";
+import MapViewComponent from "@/components/utils/MapsManager";
 import Auth from "@/components/Auth";
 import Account from "@/components/Account";
 import { useAuth } from "@/context/AuthContext";
@@ -18,9 +19,7 @@ export default function HomePage() {
     const { session } = useAuth();
     const [profileComplete, setProfileComplete] = useState(false);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<"All">("All");
-
-    const tabs: ("All")[] = ["All"];
+    const [activeTab, setActiveTab] = useState<"Tasks" | "Map">("Tasks");
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -64,24 +63,24 @@ export default function HomePage() {
 
             <View style={styles.tabsContainer}>
                 <View style={styles.tabs}>
-                    {tabs.map((tab) => (
-                        <TouchableOpacity
-                            key={tab}
-                            style={[styles.tab, activeTab === tab && styles.activeTab]}
-                            onPress={() => setActiveTab(tab)}
-                        >
-                            <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>{tab}</Text>
-                        </TouchableOpacity>
-                    ))}
+                    <TouchableOpacity
+                        style={[styles.tab, activeTab === "Tasks" && styles.activeTab, styles.halfWidthTab]}
+                        onPress={() => setActiveTab("Tasks")}
+                    >
+                        <Text style={[styles.tabText, activeTab === "Tasks" && styles.activeTabText]}>Tasks</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.tab, activeTab === "Map" && styles.activeTab, styles.halfWidthTab]}
+                        onPress={() => setActiveTab("Map")}
+                    >
+                        <Text style={[styles.tabText, activeTab === "Map" && styles.activeTabText]}>Map</Text>
+                    </TouchableOpacity>
                 </View>
-                <TouchableOpacity style={styles.addCategoryButton}>
-                    <Feather name="plus" size={24} color="black" />
-                </TouchableOpacity>
             </View>
 
             <View style={styles.divider} />
-                
-            <TasksManager />
+            
+            {activeTab === "Tasks" ? <TasksManager /> : <MapViewComponent />}
 
         </SafeAreaView>
     );
@@ -128,11 +127,16 @@ const styles = StyleSheet.create({
     },
     tabs: {
         flexDirection: "row",
-        flex: 1,
+        width: "100%",
     },
     tab: {
         paddingVertical: 12,
-        marginRight: 20,
+        alignItems: "center",
+    },
+    halfWidthTab: {
+        width: "50%",
+        justifyContent: "center",
+        alignItems: "center",
     },
     activeTab: {
         borderBottomWidth: 2,
@@ -145,9 +149,6 @@ const styles = StyleSheet.create({
     activeTabText: {
         color: "black",
         fontWeight: "500",
-    },
-    addCategoryButton: {
-        padding: 8,
     },
     divider: {
         height: 1,
