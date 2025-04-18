@@ -94,7 +94,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isVisible, onClose }) => {
             return;
         }
         
-        addTask(taskTitle.trim(), taskDescription, "", coordinates);
+        addTask(taskTitle.trim(), taskDescription, coordinates || undefined);
         resetForm();
         onClose();
     };

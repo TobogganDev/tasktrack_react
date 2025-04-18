@@ -17,16 +17,54 @@ import AddTaskModal from "@/components/modals/AddTaskModal";
 import { useTasksContext } from "@/context/TasksContext";
 import { Task } from "@/types/Task";
 
-const parsePointGeometry = (pointStr: string | null): { latitude: number, longitude: number } | null => {
+interface Coordinates {
+  latitude: number;
+  longitude: number;
+}
+
+const parsePointGeometry = (pointStr: string | null): Coordinates | null => {
   if (!pointStr) return null;
   
   try {
-    const match = pointStr.match(/POINT\(([^ ]+) ([^ ]+)\)/);
-    if (match && match.length === 3) {
-      const longitude = parseFloat(match[1]);
-      const latitude = parseFloat(match[2]);
+    if (typeof pointStr === 'string' && pointStr.startsWith('POINT')) {
+      const match = pointStr.match(/POINT\(([^ ]+) ([^ ]+)\)/);
+      if (match && match.length === 3) {
+        const longitude = parseFloat(match[1]);
+        const latitude = parseFloat(match[2]);
+        
+        if (!isNaN(longitude) && !isNaN(latitude)) {
+          return { latitude, longitude };
+        }
+      }
+    }
+    
+    if (typeof pointStr === 'string' && pointStr.startsWith('0101000020E6100000')) {
+      const xHex = pointStr.substring(18, 34);
+      const yHex = pointStr.substring(34, 50);
       
-      if (!isNaN(longitude) && !isNaN(latitude)) {
+      const xBytes: number[] = [];
+      const yBytes: number[] = [];
+      
+      for (let i = 0; i < 16; i += 2) {
+        xBytes.push(parseInt(xHex.substring(i, i + 2), 16));
+        yBytes.push(parseInt(yHex.substring(i, i + 2), 16));
+      }
+      
+      const xBuffer = new ArrayBuffer(8);
+      const yBuffer = new ArrayBuffer(8);
+      const xView = new DataView(xBuffer);
+      const yView = new DataView(yBuffer);
+      
+      for (let i = 0; i < 8; i++) {
+        xView.setUint8(i, xBytes[7 - i]);
+        yView.setUint8(i, yBytes[7 - i]);
+      }
+      
+      const longitude = xView.getFloat64(0);
+      const latitude = yView.getFloat64(0);
+      
+      if (!isNaN(longitude) && !isNaN(latitude) && 
+          Math.abs(longitude) <= 180 && Math.abs(latitude) <= 90) {
         return { latitude, longitude };
       }
     }
@@ -38,7 +76,7 @@ const parsePointGeometry = (pointStr: string | null): { latitude: number, longit
 };
 
 export default function MapViewComponent() {
-  const [location, setLocation] = useState(null);
+  const [location, setLocation] = useState<Location.LocationObject | null>(null);
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -51,7 +89,7 @@ export default function MapViewComponent() {
   const { tasks, fetchTasks } = useTasksContext();
   
   const tasksWithLocation = tasks.filter(task => {
-    const coords = parsePointGeometry(task.location);
+    const coords = parsePointGeometry(typeof task.location === 'string' ? task.location : null);
     return coords !== null;
   });
 
@@ -100,7 +138,7 @@ export default function MapViewComponent() {
   const handleMarkerPress = (task: Task) => {
     setSelectedTask(task);
     
-    const coords = parsePointGeometry(task.location);
+    const coords = parsePointGeometry(typeof task.location === 'string' ? task.location : null);
     if (coords && mapRef.current) {
       mapRef.current.animateToRegion({
         ...coords,
@@ -130,7 +168,7 @@ export default function MapViewComponent() {
     console.log("Map is ready. Task count with location:", tasksWithLocation.length);
     
     tasksWithLocation.forEach((task, index) => {
-      const coords = parsePointGeometry(task.location);
+      const coords = parsePointGeometry(typeof task.location === 'string' ? task.location : null);
       console.log(`Task ${index} (${task.id}): ${task.title} - Coords:`, coords);
     });
   };
@@ -185,7 +223,7 @@ export default function MapViewComponent() {
             />
             
             {mapReady && tasksWithLocation.map(task => {
-              const coords = parsePointGeometry(task.location);
+              const coords = parsePointGeometry(typeof task.location === 'string' ? task.location : null);
               if (!coords) return null;
               
               return (

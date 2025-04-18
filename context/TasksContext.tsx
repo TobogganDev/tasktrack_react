@@ -92,7 +92,7 @@ export const TasksProvider = ({ children }: { children: ReactNode }) => {
     const addTask = async (
         title: string, 
         description: string, 
-        coordinates?: { latitude: number, longitude: number }
+        coordinates?: { latitude: number, longitude: number } | null
     ) => {
         setLoading(true);
         if (!session?.user) {
@@ -114,9 +114,8 @@ export const TasksProvider = ({ children }: { children: ReactNode }) => {
             user_id: session.user.id,
             location: locationData,
         });
-
         if (error) console.error("addTask error", error);
-        await fetchTasks(page);
+        await fetchTasks(1);
     };
 
     return (
