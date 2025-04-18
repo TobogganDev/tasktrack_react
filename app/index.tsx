@@ -1,12 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-    StyleSheet,
-    Text,
-    View,
-    TouchableOpacity,
-    ActivityIndicator,
-    SafeAreaView,
-} from "react-native";
+import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, SafeAreaView } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import TasksManager from "@/components/utils/TasksManager";
 import MapViewComponent from "@/components/utils/MapsManager";
@@ -51,16 +44,6 @@ export default function HomePage() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
-                <TouchableOpacity>
-                    <Feather name="menu" size={24} color="black" />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Your Tasks</Text>
-                <TouchableOpacity>
-                    <Feather name="search" size={24} color="black" />
-                </TouchableOpacity>
-            </View>
-
             <View style={styles.tabsContainer}>
                 <View style={styles.tabs}>
                     <TouchableOpacity
@@ -82,6 +65,7 @@ export default function HomePage() {
             
             {activeTab === "Tasks" ? <TasksManager /> : <MapViewComponent />}
 
+            <TasksManager />
         </SafeAreaView>
     );
 }
