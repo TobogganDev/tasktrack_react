@@ -12,7 +12,7 @@ interface TasksContextType {
     prevPage: () => void;
     setPage: (p: number) => void;
     fetchTasks: (page?: number) => Promise<void>;
-    addTask: (title: string, description: string) => Promise<void>;
+    addTask: (title: string, description: string, coordinates?: { latitude: number, longitude: number }) => Promise<void>;
 }
 
 const TasksContext = createContext<TasksContextType | undefined>(undefined);
@@ -89,19 +89,32 @@ export const TasksProvider = ({ children }: { children: ReactNode }) => {
     const nextPage = () => setPage((prev) => prev + 1);
     const prevPage = () => setPage((prev) => Math.max(1, prev - 1));
 
-    const addTask = async (title: string, desription: string) => {
+    const addTask = async (
+        title: string, 
+        description: string, 
+        coordinates?: { latitude: number, longitude: number }
+    ) => {
         setLoading(true);
         if (!session?.user) {
             console.warn("no session!");
             setLoading(false);
             return;
         }
+        
+        let locationData = null;
+        
+        if (coordinates) {
+            locationData = `POINT(${coordinates.longitude} ${coordinates.latitude})`;
+        }
+
         const { error } = await supabase.from("tasks").insert({
             title,
-            description: desription,
+            description,
             done: false,
             user_id: session.user.id,
+            location: locationData,
         });
+
         if (error) console.error("addTask error", error);
         await fetchTasks(page);
     };
