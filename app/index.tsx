@@ -65,7 +65,6 @@ export default function HomePage() {
             
             {activeTab === "Tasks" ? <TasksManager /> : <MapViewComponent />}
 
-            <TasksManager />
         </SafeAreaView>
     );
 }
