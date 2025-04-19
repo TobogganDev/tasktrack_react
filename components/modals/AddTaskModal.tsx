@@ -14,8 +14,8 @@ import {
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTasksContext } from "@/context/TasksContext";
-import * as Location from 'expo-location';
-import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import * as Location from "expo-location";
+import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 
 interface AddTaskModalProps {
     isVisible: boolean;
@@ -27,20 +27,20 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isVisible, onClose }) => {
     const [taskDescription, setTaskDescription] = useState("");
     const [includeLocation, setIncludeLocation] = useState(false);
     const [locationMode, setLocationMode] = useState<"current" | "map">("current");
-    const [coordinates, setCoordinates] = useState<{latitude: number, longitude: number} | null>(null);
-    const [userLocation, setUserLocation] = useState<{latitude: number, longitude: number} | null>(null);
+    const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
+    const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
     const [loading, setLoading] = useState(false);
     const [showMap, setShowMap] = useState(false);
-    
+
     const mapRef = useRef<MapView>(null);
     const { addTask } = useTasksContext();
-    
+
     useEffect(() => {
         if (isVisible) {
             getCurrentLocation(false);
         }
     }, [isVisible]);
-    
+
     useEffect(() => {
         if (locationMode === "current" && includeLocation) {
             getCurrentLocation(true);
@@ -51,25 +51,24 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isVisible, onClose }) => {
         setLoading(true);
         try {
             const { status } = await Location.requestForegroundPermissionsAsync();
-            
-            if (status !== 'granted') {
+
+            if (status !== "granted") {
                 Alert.alert("Permission Denied", "Please allow location access to use this feature");
                 setLoading(false);
                 return;
             }
-            
+
             const location = await Location.getCurrentPositionAsync({});
             const locationData = {
                 latitude: location.coords.latitude,
-                longitude: location.coords.longitude
+                longitude: location.coords.longitude,
             };
-            
+
             setUserLocation(locationData);
-            
+
             if (setAsCoordinates) {
                 setCoordinates(locationData);
             }
-            
         } catch (error) {
             console.error("Error getting location:", error);
             Alert.alert("Error", "Could not get your current location");
@@ -77,23 +76,23 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isVisible, onClose }) => {
             setLoading(false);
         }
     };
-    
+
     const handleMapPress = (event: any) => {
         const { coordinate } = event.nativeEvent;
         setCoordinates(coordinate);
     };
-    
+
     const handleAddTask = () => {
         if (!taskTitle.trim()) {
             Alert.alert("Error", "Please enter a task title");
             return;
         }
-        
+
         if (includeLocation && !coordinates) {
             Alert.alert("Error", "Please select a location");
             return;
         }
-        
+
         addTask(taskTitle.trim(), taskDescription, coordinates || undefined);
         resetForm();
         onClose();
@@ -109,27 +108,29 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isVisible, onClose }) => {
     };
 
     return (
-        <Modal 
-            animationType="slide" 
-            transparent={true} 
-            visible={isVisible} 
+        <Modal
+            animationType="slide"
+            transparent={true}
+            visible={isVisible}
             onRequestClose={() => {
                 resetForm();
                 onClose();
             }}
         >
-            <KeyboardAvoidingView 
-                behavior={Platform.OS === "ios" ? "padding" : undefined} 
+            <KeyboardAvoidingView
+                behavior={Platform.OS === "ios" ? "padding" : undefined}
                 style={styles.centeredView}
                 keyboardVerticalOffset={50}
             >
                 <View style={styles.modalView}>
                     <View style={styles.modalHeader}>
                         <Text style={styles.modalTitle}>Add New Task</Text>
-                        <TouchableOpacity onPress={() => {
-                            resetForm();
-                            onClose();
-                        }}>
+                        <TouchableOpacity
+                            onPress={() => {
+                                resetForm();
+                                onClose();
+                            }}
+                        >
                             <Feather name="x" size={24} color="black" />
                         </TouchableOpacity>
                     </View>
@@ -154,8 +155,8 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isVisible, onClose }) => {
                     <View style={styles.toggleContainer}>
                         <Text style={styles.toggleText}>Include Location</Text>
                         <Switch
-                            trackColor={{ false: "#767577", true: "#81b0ff" }}
-                            thumbColor={includeLocation ? "#f5dd4b" : "#f4f3f4"}
+                            trackColor={{ false: "#575757", true: "#dcdcdc" }}
+                            thumbColor={includeLocation ? "#000" : "#f4f3f4"}
                             ios_backgroundColor="#3e3e3e"
                             onValueChange={() => {
                                 const newValue = !includeLocation;
@@ -171,88 +172,80 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isVisible, onClose }) => {
                     {includeLocation && (
                         <>
                             <View style={styles.locationOptions}>
-                                <TouchableOpacity 
+                                <TouchableOpacity
                                     style={[
-                                        styles.locationOption, 
-                                        locationMode === "current" && styles.locationOptionActive
+                                        styles.locationOption,
+                                        locationMode === "current" && styles.locationOptionActive,
                                     ]}
                                     onPress={() => {
                                         setLocationMode("current");
                                         setShowMap(false);
                                     }}
                                 >
-                                    <Feather 
-                                        name="compass" 
-                                        size={20} 
-                                        color={locationMode === "current" ? "white" : "black"} 
+                                    <Feather
+                                        name="compass"
+                                        size={20}
+                                        color={locationMode === "current" ? "white" : "black"}
                                     />
-                                    <Text style={[
-                                        styles.locationOptionText,
-                                        locationMode === "current" && styles.locationOptionTextActive
-                                    ]}>Current Location</Text>
+                                    <Text
+                                        style={[
+                                            styles.locationOptionText,
+                                            locationMode === "current" && styles.locationOptionTextActive,
+                                        ]}
+                                    >
+                                        Current Location
+                                    </Text>
                                 </TouchableOpacity>
-                                
-                                <TouchableOpacity 
+
+                                <TouchableOpacity
                                     style={[
-                                        styles.locationOption, 
-                                        locationMode === "map" && styles.locationOptionActive
+                                        styles.locationOption,
+                                        locationMode === "map" && styles.locationOptionActive,
                                     ]}
                                     onPress={() => {
                                         setLocationMode("map");
                                         setShowMap(true);
                                     }}
                                 >
-                                    <Feather 
-                                        name="map-pin" 
-                                        size={20} 
-                                        color={locationMode === "map" ? "white" : "black"} 
+                                    <Feather
+                                        name="map-pin"
+                                        size={20}
+                                        color={locationMode === "map" ? "white" : "black"}
                                     />
-                                    <Text style={[
-                                        styles.locationOptionText,
-                                        locationMode === "map" && styles.locationOptionTextActive
-                                    ]}>Select on Map</Text>
+                                    <Text
+                                        style={[
+                                            styles.locationOptionText,
+                                            locationMode === "map" && styles.locationOptionTextActive,
+                                        ]}
+                                    >
+                                        Select on Map
+                                    </Text>
                                 </TouchableOpacity>
                             </View>
-                            
+
                             {locationMode === "map" && (
-                                <TouchableOpacity 
-                                    style={styles.mapToggle}
-                                    onPress={() => setShowMap(!showMap)}
-                                >
-                                    <Text style={styles.mapToggleText}>
-                                        {showMap ? "Hide Map" : "Show Map"}
-                                    </Text>
-                                    <Feather 
-                                        name={showMap ? "chevron-up" : "chevron-down"} 
-                                        size={20} 
-                                        color="black" 
-                                    />
+                                <TouchableOpacity style={styles.mapToggle} onPress={() => setShowMap(!showMap)}>
+                                    <Text style={styles.mapToggleText}>{showMap ? "Hide Map" : "Show Map"}</Text>
+                                    <Feather name={showMap ? "chevron-up" : "chevron-down"} size={20} color="black" />
                                 </TouchableOpacity>
                             )}
-                            
-                            {showMap && (
+
+                            {showMap && userLocation && (
                                 <View style={styles.mapContainer}>
                                     <MapView
                                         ref={mapRef}
                                         style={styles.map}
-                                        provider={PROVIDER_GOOGLE}
-                                        initialRegion={
-                                            userLocation ? {
-                                                ...userLocation,
-                                                latitudeDelta: 0.01,
-                                                longitudeDelta: 0.01,
-                                            } : undefined
-                                        }
+                                        provider={Platform.OS === "android" ? PROVIDER_GOOGLE : undefined}
+                                        initialRegion={{
+                                            latitude: userLocation.latitude,
+                                            longitude: userLocation.longitude,
+                                            latitudeDelta: 0.01,
+                                            longitudeDelta: 0.01,
+                                        }}
                                         onPress={handleMapPress}
                                     >
-                                        {userLocation && (
-                                            <Marker
-                                                coordinate={userLocation}
-                                                pinColor="blue"
-                                                title="Your Location"
-                                            />
-                                        )}
-                                        
+                                        <Marker coordinate={userLocation} pinColor="blue" title="Your Location" />
+
                                         {coordinates && (
                                             <Marker
                                                 coordinate={coordinates}
@@ -263,7 +256,7 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isVisible, onClose }) => {
                                             />
                                         )}
                                     </MapView>
-                                    
+
                                     {locationMode === "map" && (
                                         <TouchableOpacity
                                             style={styles.centerMapButton}
@@ -282,17 +275,15 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isVisible, onClose }) => {
                                     )}
                                 </View>
                             )}
-                            
-                            {loading && (
-                                <Text style={styles.loadingText}>Getting your location...</Text>
-                            )}
+
+                            {loading && <Text style={styles.loadingText}>Getting your location...</Text>}
                         </>
                     )}
 
                     <TouchableOpacity
                         style={[
-                            styles.addButton, 
-                            (!taskTitle.trim() || (includeLocation && !coordinates)) && styles.disabledButton
+                            styles.addButton,
+                            (!taskTitle.trim() || (includeLocation && !coordinates)) && styles.disabledButton,
                         ]}
                         onPress={handleAddTask}
                         disabled={!taskTitle.trim() || (includeLocation && !coordinates) || loading}
@@ -316,7 +307,7 @@ const styles = StyleSheet.create({
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
         padding: 24,
-        maxHeight: '90%',
+        maxHeight: "90%",
         shadowColor: "#000",
         shadowOffset: {
             width: 0,
@@ -351,7 +342,7 @@ const styles = StyleSheet.create({
         padding: 12,
         fontSize: 16,
         marginBottom: 16,
-        textAlignVertical: 'top',
+        textAlignVertical: "top",
         minHeight: 80,
     },
     toggleContainer: {
@@ -378,7 +369,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: "#E0E0E0",
         flex: 1,
-        maxWidth: '48%',
+        maxWidth: "48%",
     },
     locationOptionActive: {
         backgroundColor: "black",
@@ -405,22 +396,22 @@ const styles = StyleSheet.create({
         marginRight: 8,
     },
     mapContainer: {
-        width: '100%',
+        width: "100%",
         height: 200,
         borderRadius: 8,
-        overflow: 'hidden',
+        overflow: "hidden",
         marginBottom: 16,
-        position: 'relative',
+        position: "relative",
     },
     map: {
-        width: '100%',
-        height: '100%',
+        width: "100%",
+        height: "100%",
     },
     centerMapButton: {
-        position: 'absolute',
+        position: "absolute",
         bottom: 16,
         right: 16,
-        backgroundColor: 'white',
+        backgroundColor: "white",
         borderRadius: 8,
         padding: 8,
         shadowColor: "#000",
@@ -462,7 +453,7 @@ const styles = StyleSheet.create({
         color: "#666",
         marginBottom: 10,
         fontStyle: "italic",
-        textAlign: 'center',
+        textAlign: "center",
     },
 });
 
