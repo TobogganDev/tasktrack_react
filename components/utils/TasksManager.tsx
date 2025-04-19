@@ -5,20 +5,45 @@ import TaskItem from "@/components/utils/TaskItem";
 import EmptyStateIllustration from "@/components/EmptyStateIllustration";
 import { Feather } from "@expo/vector-icons";
 import AddTaskModal from "@/components/modals/AddTaskModal";
+import SortTile from "@/components/utils/SortTile";
 
 export default function TasksManager() {
     const { tasks, loading, page, nextPage, prevPage } = useTasksContext();
+
     const [isAddTaskModalVisible, setIsAddTaskModalVisible] = useState(false);
+    const [isDateAscending, setIsDateAscending] = useState(false);
+    const [isDistanceAscending, setIsDistanceAscending] = useState(false);
+
+    const sortedTasks = [...tasks].sort((a, b) => {
+        const aTime = new Date(a.created_at || "").getTime();
+        const bTime = new Date(b.created_at || "").getTime();
+        return isDateAscending ? aTime - bTime : bTime - aTime;
+    });
 
     return (
         <View style={styles.container}>
+            <View style={styles.sortRow}>
+                <SortTile
+                    title="Date"
+                    ascending={isDateAscending}
+                    onToggle={() => setIsDateAscending((prev) => !prev)}
+                />
+                <SortTile
+                    title="Distance"
+                    ascending={isDistanceAscending}
+                    onToggle={() => setIsDistanceAscending((prev) => !prev)}
+                />
+            </View>
+
             <View style={styles.content}>
                 {loading ? (
-                    <ActivityIndicator size="small"/>
+                    <View style={styles.loader}>
+                        <ActivityIndicator size="small" />
+                    </View>
                 ) : (
                     <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-                        {tasks.length > 0 ? (
-                            tasks.map((task) => <TaskItem key={String(task.id)} task={task} />)
+                        {sortedTasks.length > 0 ? (
+                            sortedTasks.map((task) => <TaskItem key={String(task.id)} task={task} />)
                         ) : (
                             <View style={styles.emptyContainer}>
                                 <EmptyStateIllustration />
@@ -60,8 +85,15 @@ export default function TasksManager() {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, padding: 20 },
+    container: { flex: 1, paddingVertical: 20 },
+    sortRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        marginBottom: 12,
+        paddingHorizontal: 20,
+    },
     content: { flex: 1 },
+    loader: { flex: 1, justifyContent: "center", alignItems: "center" },
     scrollContent: { paddingBottom: 80 },
 
     emptyContainer: {
@@ -87,7 +119,6 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
         paddingVertical: 12,
-        borderTopWidth: 1,
         borderTopColor: "#E5E5E5",
     },
     pageButton: {
@@ -112,7 +143,7 @@ const styles = StyleSheet.create({
     fab: {
         position: "absolute",
         right: 24,
-        bottom: 24 + 60,
+        bottom: 84,
         width: 56,
         height: 56,
         borderRadius: 28,

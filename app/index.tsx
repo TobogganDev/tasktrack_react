@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, View, TouchableOpacity, ActivityIndicator, SafeAreaView } from "react-native";
-import { Feather } from "@expo/vector-icons";
 import TasksManager from "@/components/utils/TasksManager";
 import MapViewComponent from "@/components/utils/MapsManager";
 import Auth from "@/components/Auth";
@@ -79,21 +78,9 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: "bold",
     },
-
     container: {
         flex: 1,
         backgroundColor: "#fff",
-    },
-    header: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-    },
-    headerTitle: {
-        fontSize: 18,
-        fontWeight: "600",
     },
     userInfo: {
         flexDirection: "row",
@@ -106,7 +93,6 @@ const styles = StyleSheet.create({
     tabsContainer: {
         flexDirection: "row",
         alignItems: "center",
-        paddingHorizontal: 16,
     },
     tabs: {
         flexDirection: "row",
@@ -153,46 +139,6 @@ const styles = StyleSheet.create({
         color: "#757575",
         textAlign: "center",
         marginTop: 8,
-    },
-    taskList: {
-        padding: 16,
-    },
-    taskItem: {
-        flexDirection: "row",
-        alignItems: "center",
-        paddingVertical: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: "#F5F5F5",
-    },
-    checkbox: {
-        width: 24,
-        height: 24,
-        borderRadius: 12,
-        borderWidth: 2,
-        borderColor: "#9E9E9E",
-        justifyContent: "center",
-        alignItems: "center",
-        marginRight: 12,
-    },
-    checkboxChecked: {
-        backgroundColor: "#4CAF50",
-        borderColor: "#4CAF50",
-    },
-    taskContent: {
-        flex: 1,
-    },
-    taskTitle: {
-        fontSize: 16,
-        fontWeight: "500",
-        marginBottom: 4,
-    },
-    taskTitleCompleted: {
-        textDecorationLine: "line-through",
-        color: "#9E9E9E",
-    },
-    taskCategory: {
-        fontSize: 14,
-        color: "#757575",
     },
     fab: {
         position: "absolute",
