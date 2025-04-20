@@ -14,6 +14,7 @@ import { LocationProvider } from "@/context/LocationContext";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Drawer } from "expo-router/drawer";
 import CustomMenu from "@/components/layouts/CustomMenu";
+import NotificationManager from "@/components/utils/NotificationManager";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -39,6 +40,7 @@ export default function App() {
             <TasksProvider>
                 <LocationProvider>
                     <GestureHandlerRootView style={{ flex: 1 }}>
+                        <NotificationManager />
                         <Drawer drawerContent={CustomMenu} screenOptions={{ drawerHideStatusBarOnOpen: true, headerStyle: { borderBottomColor: '#fff'} }}>
                             <Drawer.Screen
                                 name="index"

@@ -1,9 +1,9 @@
 export interface Task {
     id?: number;
-    user_id: string;
     title: string;
-    description?: string | null;
-    location?: Record<string, any> | null;
-    done?: boolean | null;
-    created_at?: Date;
+    description: string | null;
+    done: boolean;
+    created_at?: string;
+    user_id?: string;
+    location?: string | null;
 }
