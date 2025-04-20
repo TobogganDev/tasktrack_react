@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTasksContext } from "@/context/TasksContext";
-import { useLocation } from "@/context/LocationContext";
+import { useLocation } from "@/context/locationContext";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 
 interface AddTaskModalProps {

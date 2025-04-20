@@ -6,7 +6,7 @@ import EmptyStateIllustration from "@/components/EmptyStateIllustration";
 import { Feather } from "@expo/vector-icons";
 import AddTaskModal from "@/components/modals/AddTaskModal";
 import SortTile from "@/components/utils/SortTile";
-import { useLocation } from "@/context/LocationContext";
+import { useLocation } from "@/context/locationContext";
 import { Task } from "@/types/Task";
 
 export default function TasksManager() {

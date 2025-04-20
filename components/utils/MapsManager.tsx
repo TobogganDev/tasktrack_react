@@ -13,7 +13,7 @@ import MapView, { Marker, PROVIDER_GOOGLE, Callout } from 'react-native-maps';
 import { Feather } from "@expo/vector-icons";
 import AddTaskModal from "@/components/modals/AddTaskModal";
 import { useTasksContext } from "@/context/TasksContext";
-import { useLocation } from "@/context/LocationContext";
+import { useLocation } from "@/context/locationContext";
 import { Task } from "@/types/Task";
 
 export default function MapViewComponent() {

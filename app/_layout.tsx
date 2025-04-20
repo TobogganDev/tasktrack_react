@@ -11,7 +11,7 @@ import { useEffect as reactUseEffect } from "react";
 import { ThemeProvider, useTheme } from "@/context/ThemeContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { TasksProvider } from "@/context/TasksContext";
-import { LocationProvider } from "@/context/LocationContext";
+import { LocationProvider } from "@/context/locationContext";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Drawer } from "expo-router/drawer";
 import CustomMenu from "@/components/layouts/CustomMenu";
