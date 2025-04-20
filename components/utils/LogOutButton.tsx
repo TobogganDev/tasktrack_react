@@ -1,40 +1,39 @@
 import React from "react";
-import { Alert, StyleSheet, Touchable, TouchableOpacity, Text } from "react-native";
-import { Button } from "@rneui/themed";
+import { Alert, StyleSheet, TouchableOpacity, Text } from "react-native";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/context/ThemeContext";
 
 export default function LogOutButton() {
     const { setSession } = useAuth();
+    const { theme } = useTheme();
 
     async function handleSignOut() {
         try {
             const { error } = await supabase.auth.signOut();
             if (error) throw error;
             setSession(null);
-        } catch (error: any) {
-            Alert.alert("Error signing out", error.message);
+        } catch (err: any) {
+            Alert.alert("Error signing out", err.message);
         }
     }
 
     return (
-        <TouchableOpacity onPress={handleSignOut} style={styles.button}>
-            <Text style={styles.buttonText}>Log Out</Text>
+        <TouchableOpacity onPress={handleSignOut} style={[styles.button, { backgroundColor: theme.colors.primary }]}>
+            <Text style={[styles.text, { color: theme.colors.card }]}>Log Out</Text>
         </TouchableOpacity>
     );
 }
 
 const styles = StyleSheet.create({
     button: {
-        backgroundColor: "black",
         borderRadius: 8,
-        paddingVertical: 16,
-        paddingHorizontal: 24,
+        paddingVertical: 12,
+        paddingHorizontal: 16,
         width: "100%",
         alignItems: "center",
     },
-    buttonText: {
-        color: "white",
+    text: {
         fontSize: 16,
         fontWeight: "bold",
     },

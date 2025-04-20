@@ -18,8 +18,6 @@ export const useTheme = () => {
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     const systemScheme = Appearance.getColorScheme();
-    console.log('OS', Platform.OS);
-    console.log("System color scheme:", systemScheme);
     const [scheme, setScheme] = useState<ColorSchemeName>(systemScheme);
 
     useEffect(() => {

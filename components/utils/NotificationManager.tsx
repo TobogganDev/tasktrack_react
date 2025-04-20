@@ -36,7 +36,6 @@ export default function NotificationManager() {
       }
       
       setNotificationTapHandler((taskId) => {
-        console.log("Notification tapped for task:", taskId);
         fetchTasks();
       });
       
@@ -49,10 +48,8 @@ export default function NotificationManager() {
   useEffect(() => {
     const manageLocationTracking = async () => {
       if (session) {
-        console.log("Starting location tracking for notifications");
         await startLocationTracking();
       } else if (isInitialized) {
-        console.log("Stopping location tracking");
         await stopLocationTracking();
       }
     };

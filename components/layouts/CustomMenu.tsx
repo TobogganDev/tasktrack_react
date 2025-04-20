@@ -2,7 +2,6 @@ import { DrawerContentScrollView, DrawerItem, DrawerItemList } from "@react-navi
 import LogOutButton from "../utils/LogOutButton";
 import { View, Text, Image } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useTheme } from "@/context/ThemeContext";
 import ThemeToggle from "../utils/ThemToggle";
@@ -29,11 +28,6 @@ export default function CustomMenu(props: any) {
 
                 <DrawerItemList {...props} />
 
-                <DrawerItem
-                    label="Settings"
-                    onPress={() => router.push("/settings")}
-                    icon={({ color, size }) => <Feather name="settings" color={color} size={size} />}
-                />
                 <ThemeToggle />
             </DrawerContentScrollView>
             <View style={{ paddingBottom: 20 + bottom, paddingHorizontal: 20 }}>

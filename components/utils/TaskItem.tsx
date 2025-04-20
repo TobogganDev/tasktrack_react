@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { Task } from "@/types/Task";
 import { Ionicons } from "@expo/vector-icons";
 import { useTasksContext } from "@/context/TasksContext";
+import { useTheme } from "@/context/ThemeContext";
 
 interface TaskItemProps {
     task: Task;
@@ -10,6 +11,8 @@ interface TaskItemProps {
 
 export default function TaskItem({ task }: TaskItemProps) {
     const { toggleTaskDone } = useTasksContext();
+    const { theme } = useTheme();
+
     const taskDate = new Date(task.created_at!);
     const taskDateString = taskDate.toLocaleDateString("en-GB", {
         day: "numeric",
@@ -17,41 +20,59 @@ export default function TaskItem({ task }: TaskItemProps) {
     });
 
     const handleToggleDone = () => {
-        if (task.id) {
+        if (task.id != null) {
             toggleTaskDone(task.id, !task.done);
         }
     };
 
     return (
-        <View style={[styles.container, task.done && styles.taskDone]}>
+        <View
+            style={[
+                styles.container,
+                { backgroundColor: theme.colors.card, borderColor: theme.colors.border },
+                task.done && {
+                    backgroundColor: theme.colors.card,
+                    borderWidth: 1,
+                },
+            ]}
+        >
             <View style={styles.header}>
-                <Text style={[styles.title, task.done && styles.titleDone]}>
+                <Text
+                    style={[
+                        styles.title,
+                        { color: theme.colors.text },
+                        task.done && { color: theme.colors.border, textDecorationLine: "line-through" },
+                    ]}
+                >
                     {task.title}
                 </Text>
-                <TouchableOpacity 
-                    style={[styles.checkButton, task.done && styles.checkButtonDone]} 
+
+                <TouchableOpacity
                     onPress={handleToggleDone}
+                    style={[styles.checkButton, task.done && { backgroundColor: theme.colors.primary }]}
                 >
                     {task.done ? (
-                        <Ionicons name="checkmark-circle" size={24} color="#fff" />
+                        <Ionicons name="checkmark-circle" size={24} color={theme.colors.card} />
                     ) : (
-                        <Ionicons name="checkmark-circle-outline" size={24} color="#000" />
+                        <Ionicons name="checkmark-circle-outline" size={24} color={theme.colors.primary} />
                     )}
                 </TouchableOpacity>
             </View>
-            
+
             <View style={styles.row}>
-                <Ionicons name="calendar" size={16} color={task.done ? "#999" : "#666"} style={styles.icon} />
-                <Text style={[styles.info, task.done && styles.infoDone]}>{taskDateString}</Text>
-                {task.done && (
-                    <View style={styles.statusBadge}>
-                        <Text style={styles.statusText}>Completed</Text>
-                    </View>
-                )}
+                <Ionicons
+                    name="calendar"
+                    size={16}
+                    color={task.done ? theme.colors.border : theme.colors.text}
+                    style={styles.icon}
+                />
+                <Text style={[styles.info, { color: task.done ? theme.colors.border : theme.colors.text }]}>
+                    {taskDateString}
+                </Text>
             </View>
 
             {task.description ? (
-                <Text style={[styles.description, task.done && styles.descriptionDone]}>
+                <Text style={[styles.description, { color: task.done ? theme.colors.border : theme.colors.text }]}>
                     {task.description}
                 </Text>
             ) : null}
@@ -64,18 +85,12 @@ const styles = StyleSheet.create({
         marginVertical: 8,
         marginHorizontal: 20,
         padding: 12,
-        backgroundColor: "#FFF",
         borderRadius: 16,
         elevation: 2,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.1,
         shadowRadius: 2,
-    },
-    taskDone: {
-        backgroundColor: "#F5F5F5",
-        borderColor: "#E0E0E0",
-        borderWidth: 1,
     },
     header: {
         flexDirection: "row",
@@ -85,12 +100,12 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 20,
         fontWeight: "600",
-        marginBottom: 8,
         flex: 1,
+        marginBottom: 8,
     },
-    titleDone: {
-        color: "#999",
-        textDecorationLine: "line-through",
+    checkButton: {
+        padding: 4,
+        borderRadius: 20,
     },
     row: {
         flexDirection: "row",
@@ -102,36 +117,19 @@ const styles = StyleSheet.create({
     },
     info: {
         fontSize: 14,
-        color: "#666",
-    },
-    infoDone: {
-        color: "#999",
     },
     description: {
         fontSize: 16,
-        color: "#333",
         marginTop: 4,
     },
-    descriptionDone: {
-        color: "#999",
-    },
-    checkButton: {
-        padding: 4,
-        borderRadius: 20,
-    },
-    checkButtonDone: {
-        backgroundColor: "#4CAF50",
-    },
     statusBadge: {
-        backgroundColor: "#4CAF50",
         borderRadius: 12,
         paddingHorizontal: 8,
         paddingVertical: 2,
         marginLeft: 8,
     },
     statusText: {
-        color: "white",
         fontSize: 12,
         fontWeight: "500",
-    }
+    },
 });

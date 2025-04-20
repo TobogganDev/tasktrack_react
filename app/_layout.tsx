@@ -8,14 +8,16 @@ import {
 } from "@expo-google-fonts/montserrat";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect as reactUseEffect } from "react";
-import { ThemeProvider, useTheme } from "@/context/ThemeContext";
-import { AuthProvider } from "@/context/AuthContext";
-import { TasksProvider } from "@/context/TasksContext";
-import { LocationProvider } from "@/context/locationContext";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Drawer } from "expo-router/drawer";
-import CustomMenu from "@/components/layouts/CustomMenu";
+import { Feather } from "@expo/vector-icons";
+import { ThemeProvider, useTheme } from "@/context/ThemeContext";
+import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { TasksProvider } from "@/context/TasksContext";
+import { LocationProvider } from "@/context/locationContext";
 import NotificationManager from "@/components/utils/NotificationManager";
+import CustomMenu from "@/components/layouts/CustomMenu";
+import Auth from "@/components/Auth";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -48,22 +50,22 @@ export default function App() {
     );
 }
 
-// Put like this because of the useTheme hook
 function ThemedDrawer() {
+    const { session } = useAuth();
     const { theme } = useTheme();
+
+    if (!session) {
+        return <Auth />;
+    }
 
     return (
         <Drawer
             drawerContent={CustomMenu}
             screenOptions={{
                 drawerHideStatusBarOnOpen: true,
-                headerStyle: {
-                    backgroundColor: theme.colors.background,
-                },
+                headerStyle: { backgroundColor: theme.colors.background },
                 headerTintColor: theme.colors.text,
-                drawerStyle: {
-                    backgroundColor: theme.colors.background,
-                },
+                drawerStyle: { backgroundColor: theme.colors.background },
                 drawerActiveTintColor: theme.colors.primary,
                 drawerInactiveTintColor: theme.colors.text,
             }}
@@ -73,7 +75,15 @@ function ThemedDrawer() {
                 options={{
                     title: "Your Tasks",
                     drawerLabel: "Home",
-                    drawerIcon: () => null,
+                    drawerIcon: ({ color, size }) => <Feather name="home" color={color} size={size} />,
+                }}
+            />
+            <Drawer.Screen
+                name="settings"
+                options={{
+                    title: "Settings",
+                    drawerLabel: "Settings",
+                    drawerIcon: ({ color, size }) => <Feather name="settings" color={color} size={size} />,
                 }}
             />
         </Drawer>
