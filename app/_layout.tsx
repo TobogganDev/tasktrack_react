@@ -8,6 +8,7 @@ import {
 } from "@expo-google-fonts/montserrat";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect as reactUseEffect } from "react";
+import { ThemeProvider, useTheme } from "@/context/ThemeContext";
 import { AuthProvider } from "@/context/AuthContext";
 import { TasksProvider } from "@/context/TasksContext";
 import { LocationProvider } from "@/context/LocationContext";
@@ -26,34 +27,55 @@ export default function App() {
     });
 
     reactUseEffect(() => {
-        if (loaded || error) {
-            SplashScreen.hideAsync();
-        }
+        if (loaded || error) SplashScreen.hideAsync();
     }, [loaded, error]);
 
-    if (!loaded && !error) {
-        return null;
-    }
+    if (!loaded && !error) return null;
 
     return (
-        <AuthProvider>
-            <TasksProvider>
-                <LocationProvider>
-                    <GestureHandlerRootView style={{ flex: 1 }}>
+        <ThemeProvider>
+            <AuthProvider>
+                <TasksProvider>
+                    <LocationProvider>
                         <NotificationManager />
-                        <Drawer drawerContent={CustomMenu} screenOptions={{ drawerHideStatusBarOnOpen: true, headerStyle: { borderBottomColor: '#fff'} }}>
-                            <Drawer.Screen
-                                name="index"
-                                options={{
-                                    title: "Your Tasks",
-                                    drawerLabel: "Home",
-                                    drawerIcon: () => null,
-                                }}
-                            />
-                        </Drawer>
-                    </GestureHandlerRootView>
-                </LocationProvider>
-            </TasksProvider>
-        </AuthProvider>
+                        <GestureHandlerRootView style={{ flex: 1 }}>
+                            <ThemedDrawer />
+                        </GestureHandlerRootView>
+                    </LocationProvider>
+                </TasksProvider>
+            </AuthProvider>
+        </ThemeProvider>
+    );
+}
+
+// Put like this because of the useTheme hook
+function ThemedDrawer() {
+    const { theme } = useTheme();
+
+    return (
+        <Drawer
+            drawerContent={CustomMenu}
+            screenOptions={{
+                drawerHideStatusBarOnOpen: true,
+                headerStyle: {
+                    backgroundColor: theme.colors.background,
+                },
+                headerTintColor: theme.colors.text,
+                drawerStyle: {
+                    backgroundColor: theme.colors.background,
+                },
+                drawerActiveTintColor: theme.colors.primary,
+                drawerInactiveTintColor: theme.colors.text,
+            }}
+        >
+            <Drawer.Screen
+                name="index"
+                options={{
+                    title: "Your Tasks",
+                    drawerLabel: "Home",
+                    drawerIcon: () => null,
+                }}
+            />
+        </Drawer>
     );
 }
