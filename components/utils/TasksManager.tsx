@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, ActivityIndicator, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
 import { useTasksContext } from "@/context/TasksContext";
 import TaskItem from "@/components/utils/TaskItem";
@@ -6,19 +6,104 @@ import EmptyStateIllustration from "@/components/EmptyStateIllustration";
 import { Feather } from "@expo/vector-icons";
 import AddTaskModal from "@/components/modals/AddTaskModal";
 import SortTile from "@/components/utils/SortTile";
+import { useLocation } from "@/context/LocationContext";
+import { Task } from "@/types/Task";
 
 export default function TasksManager() {
     const { tasks, loading, page, nextPage, prevPage } = useTasksContext();
+    const { userCoordinates, parsePointGeometry } = useLocation();
 
     const [isAddTaskModalVisible, setIsAddTaskModalVisible] = useState(false);
     const [isDateAscending, setIsDateAscending] = useState(false);
     const [isDistanceAscending, setIsDistanceAscending] = useState(false);
+    const [activeSortMethod, setActiveSortMethod] = useState<"date" | "distance" | "none">("date");
+    const [sortedTasks, setSortedTasks] = useState<Task[]>([]);
 
-    const sortedTasks = [...tasks].sort((a, b) => {
-        const aTime = new Date(a.created_at || "").getTime();
-        const bTime = new Date(b.created_at || "").getTime();
-        return isDateAscending ? aTime - bTime : bTime - aTime;
-    });
+    const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = 
+            Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+        const distance = R * c;
+        return distance;
+    };
+
+    useEffect(() => {
+        const sortTasks = () => {
+            let sorted = [...tasks];
+
+            if (activeSortMethod === "date") {
+                sorted.sort((a, b) => {
+                    const aTime = new Date(a.created_at || "").getTime();
+                    const bTime = new Date(b.created_at || "").getTime();
+                    return isDateAscending ? aTime - bTime : bTime - aTime;
+                });
+            } else if (activeSortMethod === "distance" && userCoordinates) {
+                sorted = sorted.filter(task => {
+                    const taskCoords = parsePointGeometry(typeof task.location === 'string' ? task.location : null);
+                    return taskCoords !== null;
+                });
+                
+                sorted.sort((a, b) => {
+                    const aCoords = parsePointGeometry(typeof a.location === 'string' ? a.location : null);
+                    const bCoords = parsePointGeometry(typeof b.location === 'string' ? b.location : null);
+                    
+                    if (!aCoords && !bCoords) return 0;
+                    if (!aCoords) return isDistanceAscending ? 1 : -1;
+                    if (!bCoords) return isDistanceAscending ? -1 : 1;
+                    
+                    const aDistance = calculateDistance(
+                        userCoordinates.latitude, 
+                        userCoordinates.longitude, 
+                        aCoords.latitude, 
+                        aCoords.longitude
+                    );
+                    
+                    const bDistance = calculateDistance(
+                        userCoordinates.latitude, 
+                        userCoordinates.longitude, 
+                        bCoords.latitude, 
+                        bCoords.longitude
+                    );
+                    
+                    return isDistanceAscending ? aDistance - bDistance : bDistance - aDistance;
+                });
+                
+                const tasksWithoutLocation = tasks.filter(task => {
+                    const taskCoords = parsePointGeometry(typeof task.location === 'string' ? task.location : null);
+                    return taskCoords === null;
+                });
+                
+                sorted = [...sorted, ...tasksWithoutLocation];
+            }
+            
+            setSortedTasks(sorted);
+        };
+        
+        sortTasks();
+    }, [tasks, activeSortMethod, isDateAscending, isDistanceAscending, userCoordinates]);
+
+    const handleDateSort = () => {
+        if (activeSortMethod === "date") {
+            setIsDateAscending(!isDateAscending);
+        } else {
+            setActiveSortMethod("date");
+            setIsDateAscending(false);
+        }
+    };
+    
+    const handleDistanceSort = () => {
+        if (activeSortMethod === "distance") {
+            setIsDistanceAscending(!isDistanceAscending);
+        } else {
+            setActiveSortMethod("distance");
+            setIsDistanceAscending(false);
+        }
+    };
 
     return (
         <View style={styles.container}>
@@ -26,12 +111,12 @@ export default function TasksManager() {
                 <SortTile
                     title="Date"
                     ascending={isDateAscending}
-                    onToggle={() => setIsDateAscending((prev) => !prev)}
+                    onToggle={handleDateSort}
                 />
                 <SortTile
                     title="Distance"
                     ascending={isDistanceAscending}
-                    onToggle={() => setIsDistanceAscending((prev) => !prev)}
+                    onToggle={handleDistanceSort}
                 />
             </View>
 

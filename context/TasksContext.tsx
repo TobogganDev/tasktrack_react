@@ -13,6 +13,7 @@ interface TasksContextType {
     setPage: (p: number) => void;
     fetchTasks: (page?: number) => Promise<void>;
     addTask: (title: string, description: string, coordinates?: { latitude: number, longitude: number }) => Promise<void>;
+    toggleTaskDone: (taskId: number, isDone: boolean) => Promise<void>; // New function
 }
 
 const TasksContext = createContext<TasksContextType | undefined>(undefined);
@@ -31,7 +32,6 @@ export const TasksProvider = ({ children }: { children: ReactNode }) => {
     const [page, setPage] = useState<number>(1);
     const PAGE_SIZE = 10;
 
-    // Load from AsyncStorage
     const loadLocalPage = async (p: number): Promise<Task[]> => {
         try {
             const raw = await AsyncStorage.getItem(STORAGE_KEY_PREFIX + p);
@@ -42,7 +42,6 @@ export const TasksProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    // Save to AsyncStorage
     const saveLocalPage = async (p: number, arr: Task[]) => {
         try {
             await AsyncStorage.setItem(STORAGE_KEY_PREFIX + p, JSON.stringify(arr));
@@ -51,7 +50,6 @@ export const TasksProvider = ({ children }: { children: ReactNode }) => {
         }
     };
 
-    // Fetch from Supabase and sync local
     const fetchTasks = async (p: number = page) => {
         setLoading(true);
         const local = await loadLocalPage(p);
@@ -118,6 +116,38 @@ export const TasksProvider = ({ children }: { children: ReactNode }) => {
         await fetchTasks(1);
     };
 
+    const toggleTaskDone = async (taskId: number, isDone: boolean) => {
+        setLoading(true);
+        if (!session?.user) {
+            console.warn("no session!");
+            setLoading(false);
+            return;
+        }
+
+        const { error } = await supabase
+            .from("tasks")
+            .update({ done: isDone })
+            .eq("id", taskId)
+            .eq("user_id", session.user.id);
+
+        if (error) {
+            console.error("toggleTaskDone error", error);
+        } else {
+            setTasks(prevTasks =>
+                prevTasks.map(task =>
+                    task.id === taskId ? { ...task, done: isDone } : task
+                )
+            );
+
+            const updatedLocalTasks = await loadLocalPage(page);
+            const newLocalTasks = updatedLocalTasks.map(task =>
+                task.id === taskId ? { ...task, done: isDone } : task
+            );
+            await saveLocalPage(page, newLocalTasks);
+        }
+        setLoading(false);
+    };
+
     return (
         <TasksContext.Provider
             value={{
@@ -129,6 +159,7 @@ export const TasksProvider = ({ children }: { children: ReactNode }) => {
                 prevPage,
                 fetchTasks,
                 addTask,
+                toggleTaskDone,
             }}
         >
             {children}
