@@ -1,13 +1,15 @@
 {
   "expo": {
-    "name": "MemoMap",
-    "slug": "memomap",
+    "name": "tasktrack",
+    "slug": "tasktrack",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "icon": "./assets/images/memomap.png",
+    "scheme": "myapp",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./assets/images/memomap.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -16,22 +18,22 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.yourcompany.memomap",
+      "bundleIdentifier": "com.yourcompany.tasktrack",
       "infoPlist": {
         "UIBackgroundModes": [
           "location",
           "fetch"
         ],
-        "NSLocationWhenInUseUsageDescription": "MemoMap needs your location to show you nearby tasks on the map.",
-        "NSLocationAlwaysAndWhenInUseUsageDescription": "MemoMap needs to access your location in the background to notify you when you're near your tasks."
+        "NSLocationWhenInUseUsageDescription": "Allow tasktrack to use your location for showing nearby tasks on the map.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Allow tasktrack to access your location in the background to notify you when you're near your tasks."
       }
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/images/memomap.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.yourcompany.memomap",
+      "package": "com.yourcompany.tasktrack",
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
@@ -40,23 +42,39 @@
       ]
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/images/memomap.png"
     },
     "plugins": [
+      "expo-router",
       [
-        "expo-notifications",
+        "expo-splash-screen",
         {
-          "icon": "./assets/notification-icon.png",
-          "color": "#ffffff"
+          "image": "./assets/images/memomap.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#ffffff"
         }
       ],
+      "expo-font",
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "MemoMap needs to access your location in the background to notify you when you're near your tasks."
+          "locationAlwaysAndWhenInUsePermission": "Allow tasktrack to access your location in the background to notify you when you're near your tasks."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/memomap.png",
+          "color": "#ffffff"
         }
       ]
     ],
+    "experiments": {
+      "typedRoutes": true
+    },
     "extra": {
       "eas": {
         "projectId": "your-project-id"
