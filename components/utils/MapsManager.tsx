@@ -7,78 +7,16 @@ import {
   TouchableOpacity, 
   Alert, 
   Animated,
-  Platform,
-  Image
+  Platform
 } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE, Callout } from 'react-native-maps';
-import * as Location from 'expo-location';
 import { Feather } from "@expo/vector-icons";
 import AddTaskModal from "@/components/modals/AddTaskModal";
 import { useTasksContext } from "@/context/TasksContext";
+import { useLocation } from "@/context/LocationContext";
 import { Task } from "@/types/Task";
 
-interface Coordinates {
-  latitude: number;
-  longitude: number;
-}
-
-const parsePointGeometry = (pointStr: string | null): Coordinates | null => {
-  if (!pointStr) return null;
-  
-  try {
-    if (typeof pointStr === 'string' && pointStr.startsWith('POINT')) {
-      const match = pointStr.match(/POINT\(([^ ]+) ([^ ]+)\)/);
-      if (match && match.length === 3) {
-        const longitude = parseFloat(match[1]);
-        const latitude = parseFloat(match[2]);
-        
-        if (!isNaN(longitude) && !isNaN(latitude)) {
-          return { latitude, longitude };
-        }
-      }
-    }
-    
-    if (typeof pointStr === 'string' && pointStr.startsWith('0101000020E6100000')) {
-      const xHex = pointStr.substring(18, 34);
-      const yHex = pointStr.substring(34, 50);
-      
-      const xBytes: number[] = [];
-      const yBytes: number[] = [];
-      
-      for (let i = 0; i < 16; i += 2) {
-        xBytes.push(parseInt(xHex.substring(i, i + 2), 16));
-        yBytes.push(parseInt(yHex.substring(i, i + 2), 16));
-      }
-      
-      const xBuffer = new ArrayBuffer(8);
-      const yBuffer = new ArrayBuffer(8);
-      const xView = new DataView(xBuffer);
-      const yView = new DataView(yBuffer);
-      
-      for (let i = 0; i < 8; i++) {
-        xView.setUint8(i, xBytes[7 - i]);
-        yView.setUint8(i, yBytes[7 - i]);
-      }
-      
-      const longitude = xView.getFloat64(0);
-      const latitude = yView.getFloat64(0);
-      
-      if (!isNaN(longitude) && !isNaN(latitude) && 
-          Math.abs(longitude) <= 180 && Math.abs(latitude) <= 90) {
-        return { latitude, longitude };
-      }
-    }
-    return null;
-  } catch (error) {
-    console.error("Error parsing point geometry:", error);
-    return null;
-  }
-};
-
 export default function MapViewComponent() {
-  const [location, setLocation] = useState<Location.LocationObject | null>(null);
-  const [errorMsg, setErrorMsg] = useState('');
-  const [loading, setLoading] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isAddTaskModalVisible, setIsAddTaskModalVisible] = useState(false);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -87,6 +25,14 @@ export default function MapViewComponent() {
   
   const mapRef = useRef<MapView>(null);
   const { tasks, fetchTasks } = useTasksContext();
+  const { 
+    location, 
+    userCoordinates, 
+    errorMsg, 
+    loading, 
+    getCurrentLocation,
+    parsePointGeometry 
+  } = useLocation();
   
   const tasksWithLocation = tasks.filter(task => {
     const coords = parsePointGeometry(typeof task.location === 'string' ? task.location : null);
@@ -95,7 +41,6 @@ export default function MapViewComponent() {
 
   useEffect(() => {
     fetchTasks();
-    getUserLocation();
   }, []);
   
   useEffect(() => {
@@ -105,35 +50,6 @@ export default function MapViewComponent() {
       useNativeDriver: false
     }).start();
   }, [selectedTask]);
-
-  const getUserLocation = async () => {
-    try {
-      setLoading(true);
-      
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      
-      if (status !== 'granted') {
-        setErrorMsg('Permission to access location was denied');
-        Alert.alert(
-          "Location Permission Required",
-          "This app needs access to your location to show you on the map. Please grant location permission in your device settings.",
-          [
-            { text: "OK", onPress: () => console.log("OK Pressed") }
-          ]
-        );
-        setLoading(false);
-        return;
-      }
-      
-      let location = await Location.getCurrentPositionAsync({});
-      setLocation(location);
-    } catch (error) {
-      console.error("Error getting location:", error);
-      setErrorMsg('Could not fetch location');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleMarkerPress = (task: Task) => {
     setSelectedTask(task);
@@ -188,7 +104,7 @@ export default function MapViewComponent() {
         <Text style={styles.errorText}>{errorMsg}</Text>
         <TouchableOpacity 
           style={styles.retryButton}
-          onPress={getUserLocation}
+          onPress={() => getCurrentLocation()}
         >
           <Text style={styles.retryButtonText}>Retry</Text>
         </TouchableOpacity>

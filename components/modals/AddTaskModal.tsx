@@ -10,11 +10,10 @@ import {
     Platform,
     Switch,
     Alert,
-    Dimensions,
 } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTasksContext } from "@/context/TasksContext";
-import * as Location from "expo-location";
+import { useLocation } from "@/context/LocationContext";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
 
 interface AddTaskModalProps {
@@ -28,12 +27,15 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isVisible, onClose }) => {
     const [includeLocation, setIncludeLocation] = useState(false);
     const [locationMode, setLocationMode] = useState<"current" | "map">("current");
     const [coordinates, setCoordinates] = useState<{ latitude: number; longitude: number } | null>(null);
-    const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
-    const [loading, setLoading] = useState(false);
     const [showMap, setShowMap] = useState(false);
 
     const mapRef = useRef<MapView>(null);
     const { addTask } = useTasksContext();
+    const { 
+        userCoordinates, 
+        loading, 
+        getCurrentLocation 
+    } = useLocation();
 
     useEffect(() => {
         if (isVisible) {
@@ -43,39 +45,13 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isVisible, onClose }) => {
 
     useEffect(() => {
         if (locationMode === "current" && includeLocation) {
-            getCurrentLocation(true);
+            getCurrentLocation(true).then(coords => {
+                if (coords) {
+                    setCoordinates(coords);
+                }
+            });
         }
     }, [locationMode, includeLocation]);
-
-    const getCurrentLocation = async (setAsCoordinates: boolean = true) => {
-        setLoading(true);
-        try {
-            const { status } = await Location.requestForegroundPermissionsAsync();
-
-            if (status !== "granted") {
-                Alert.alert("Permission Denied", "Please allow location access to use this feature");
-                setLoading(false);
-                return;
-            }
-
-            const location = await Location.getCurrentPositionAsync({});
-            const locationData = {
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
-            };
-
-            setUserLocation(locationData);
-
-            if (setAsCoordinates) {
-                setCoordinates(locationData);
-            }
-        } catch (error) {
-            console.error("Error getting location:", error);
-            Alert.alert("Error", "Could not get your current location");
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleMapPress = (event: any) => {
         const { coordinate } = event.nativeEvent;
@@ -162,7 +138,11 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isVisible, onClose }) => {
                                 const newValue = !includeLocation;
                                 setIncludeLocation(newValue);
                                 if (newValue && locationMode === "current") {
-                                    getCurrentLocation(true);
+                                    getCurrentLocation(true).then(coords => {
+                                        if (coords) {
+                                            setCoordinates(coords);
+                                        }
+                                    });
                                 }
                             }}
                             value={includeLocation}
@@ -230,21 +210,21 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isVisible, onClose }) => {
                                 </TouchableOpacity>
                             )}
 
-                            {showMap && userLocation && (
+                            {showMap && userCoordinates && (
                                 <View style={styles.mapContainer}>
                                     <MapView
                                         ref={mapRef}
                                         style={styles.map}
                                         provider={Platform.OS === "android" ? PROVIDER_GOOGLE : undefined}
                                         initialRegion={{
-                                            latitude: userLocation.latitude,
-                                            longitude: userLocation.longitude,
+                                            latitude: userCoordinates.latitude,
+                                            longitude: userCoordinates.longitude,
                                             latitudeDelta: 0.01,
                                             longitudeDelta: 0.01,
                                         }}
                                         onPress={handleMapPress}
                                     >
-                                        <Marker coordinate={userLocation} pinColor="blue" title="Your Location" />
+                                        <Marker coordinate={userCoordinates} pinColor="blue" title="Your Location" />
 
                                         {coordinates && (
                                             <Marker
@@ -261,9 +241,9 @@ const AddTaskModal: React.FC<AddTaskModalProps> = ({ isVisible, onClose }) => {
                                         <TouchableOpacity
                                             style={styles.centerMapButton}
                                             onPress={() => {
-                                                if (userLocation && mapRef.current) {
+                                                if (userCoordinates && mapRef.current) {
                                                     mapRef.current.animateToRegion({
-                                                        ...userLocation,
+                                                        ...userCoordinates,
                                                         latitudeDelta: 0.01,
                                                         longitudeDelta: 0.01,
                                                     });

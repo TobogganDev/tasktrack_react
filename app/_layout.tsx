@@ -10,6 +10,7 @@ import * as SplashScreen from "expo-splash-screen";
 import { useEffect as reactUseEffect } from "react";
 import { AuthProvider } from "@/context/AuthContext";
 import { TasksProvider } from "@/context/TasksContext";
+import { LocationProvider } from "@/context/LocationContext";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Drawer } from "expo-router/drawer";
 import CustomMenu from "@/components/layouts/CustomMenu";
@@ -36,18 +37,20 @@ export default function App() {
     return (
         <AuthProvider>
             <TasksProvider>
-                <GestureHandlerRootView style={{ flex: 1 }}>
-                    <Drawer drawerContent={CustomMenu} screenOptions={{ drawerHideStatusBarOnOpen: true, headerStyle: { borderBottomColor: '#fff'} }}>
-                        <Drawer.Screen
-                            name="index"
-                            options={{
-                                title: "Your Tasks",
-                                drawerLabel: "Home",
-                                drawerIcon: () => null,
-                            }}
-                        />
-                    </Drawer>
-                </GestureHandlerRootView>
+                <LocationProvider>
+                    <GestureHandlerRootView style={{ flex: 1 }}>
+                        <Drawer drawerContent={CustomMenu} screenOptions={{ drawerHideStatusBarOnOpen: true, headerStyle: { borderBottomColor: '#fff'} }}>
+                            <Drawer.Screen
+                                name="index"
+                                options={{
+                                    title: "Your Tasks",
+                                    drawerLabel: "Home",
+                                    drawerIcon: () => null,
+                                }}
+                            />
+                        </Drawer>
+                    </GestureHandlerRootView>
+                </LocationProvider>
             </TasksProvider>
         </AuthProvider>
     );
